@@ -11,7 +11,7 @@ bool CheckRunningProcess(string proc, bool close)
             if (close)
             {
                 Console.WriteLine("Closing qBittorrent...");
-                process.CloseMainWindow();
+                process.Kill();
             }
             return true;
         }
@@ -23,12 +23,11 @@ if (Environment.GetCommandLineArgs().Length == 1)
 {
     Console.Error.WriteLine("Please specify a folder");
     Environment.Exit(0);
-}    
+}
 
-Console.WriteLine("Checking if qBittorrent is running...");
+Console.WriteLine("Stopping qBittorrent if running...");
 _ = CheckRunningProcess("qbittorrent", true);
 
-Console.WriteLine("Checking if qBittorrent is running...");
 while (CheckRunningProcess("qbittorrent", false))
 {
     await Task.Delay(10000);
@@ -37,25 +36,56 @@ while (CheckRunningProcess("qbittorrent", false))
 
 Console.WriteLine("qBittorent is closed. Press key to continue");
 Console.ReadLine();
-string loc = Environment.GetCommandLineArgs()[1].ToString();
-string rar = Environment.ExpandEnvironmentVariables("%ProgramW6432%") + "\\WinRAR\\Rar.exe";
 
-string b = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\qBittorrent";
+if (Environment.GetCommandLineArgs()[1].ToString() == "restore")
+{
+    string loc = Environment.GetCommandLineArgs()[2].ToString();
+    string rar = Environment.ExpandEnvironmentVariables("%ProgramW6432%") + "\\WinRAR\\Rar.exe";
 
-Process p = new Process();
-p.StartInfo.FileName = rar;
-p.StartInfo.Arguments = "a -m0 -ep1 \"" + loc + "\\qbt_local.rar\" \"" + b + "\"";
-p.Start();
-p.WaitForExit();
+    string b = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+    Console.WriteLine("Executing: rar " + "x -kb \"" + loc + "\\qbt_local.rar\" \"" + b + "\"");
 
-b = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\qBittorrent";
+    Process p = new Process();
+    p.StartInfo.FileName = rar;
+    p.StartInfo.Arguments = "x -kb \"" + loc + "\\qbt_local.rar\" \"" + b + "\"";
+    p.Start();
+    p.WaitForExit();
 
-p.StartInfo.FileName = rar;
-p.StartInfo.Arguments = "a -m0 -ep1 \"" + loc + "\\qbt_roaming.rar\" \"" + b + "\"";
-p.Start();
-p.WaitForExit();
+    b = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+    Console.WriteLine("Executing: rar " + "x -kb \"" + loc + "\\qbt_roaming.rar\" \"" + b + "\"");
 
-Console.WriteLine("Done backing up. Starting qbittorrent again");
-p.StartInfo.FileName = Environment.ExpandEnvironmentVariables("%ProgramW6432%") + "\\qBittorrent\\qbittorrent.exe";
-p.StartInfo.Arguments = "";
-p.Start();
+    p.StartInfo.FileName = rar;
+    p.StartInfo.Arguments = "x -kb \"" + loc + "\\qbt_roaming.rar\" \"" + b + "\"";
+    p.Start();
+    p.WaitForExit();
+
+    Console.WriteLine("Done restoring. Starting qbittorrent again");
+    p.StartInfo.FileName = Environment.ExpandEnvironmentVariables("%ProgramW6432%") + "\\qBittorrent\\qbittorrent.exe";
+    p.StartInfo.Arguments = "";
+    p.Start();
+}
+else
+{
+    string loc = Environment.GetCommandLineArgs()[1].ToString();
+    string rar = Environment.ExpandEnvironmentVariables("%ProgramW6432%") + "\\WinRAR\\Rar.exe";
+
+    string b = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\qBittorrent";
+
+    Process p = new Process();
+    p.StartInfo.FileName = rar;
+    p.StartInfo.Arguments = "a -m0 -ep1 \"" + loc + "\\qbt_local.rar\" \"" + b + "\"";
+    p.Start();
+    p.WaitForExit();
+
+    b = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\qBittorrent";
+
+    p.StartInfo.FileName = rar;
+    p.StartInfo.Arguments = "a -m0 -ep1 \"" + loc + "\\qbt_roaming.rar\" \"" + b + "\"";
+    p.Start();
+    p.WaitForExit();
+
+    Console.WriteLine("Done backing up. Starting qbittorrent again");
+    p.StartInfo.FileName = Environment.ExpandEnvironmentVariables("%ProgramW6432%") + "\\qBittorrent\\qbittorrent.exe";
+    p.StartInfo.Arguments = "";
+    p.Start();
+}
