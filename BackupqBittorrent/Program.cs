@@ -10,7 +10,7 @@ bool CheckRunningProcess(string proc, bool close)
         {
             if (close)
             {
-                Console.WriteLine("Closing qBittorrent...");
+                Console.WriteLine("Closing " + proc + "...");
                 process.Kill();
             }
             return true;
